@@ -1,15 +1,23 @@
 import Image from 'next/image'
+import { useState } from 'react'
 
-const EventCard = ({event}) => {
-const eventDate = event.eventDate.split("-");
+const EventCard = ({ event }) => {
+  const [imageSrc, setImageSrc] = useState(event.eventPoster);
+  const eventDate = event.eventDate.split("-");
+
   return (
     <div className="flex flex-col w-full max-w-[300px]">
       <Image
-        src={event.eventPoster}
+        src={imageSrc}
         alt="event"
         width={250}
         height={250}
         className="w-full aspect-square border-[3px] sm:border-[4px] md:border-[5px] border-[#D3DEE3] rounded-2xl object-contain"
+        onError={(e) => {
+          e.target.onerror = null;
+          setImageSrc('/images/fallbackImage.svg');
+        }}
+        
       />
       <div className="flex mt-3 gap-2 w-full">
         <div className="flex flex-col items-center text-center rounded-md min-w-[50px]">
@@ -17,10 +25,10 @@ const eventDate = event.eventDate.split("-");
             {eventDate[0]}
           </p>
           <p className="text-base sm:text-lg font-medium px-3 bg-[#E7EDF0] w-full">
-          {eventDate[1]}
+            {eventDate[1]}
           </p>
           <p className="text-[10px] sm:text-xs px-3 rounded-b-md bg-[#E7EDF0] w-full -mt-1 pb-1">
-          {eventDate[2]}
+            {eventDate[2]}
           </p>
         </div>
         <div className="flex flex-col justify-center flex-1">

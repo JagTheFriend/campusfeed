@@ -21,7 +21,7 @@ export default function EventsHomePage({ events }) {
   const [dateRange, setDateRange] = useState(null);
   const [selectedLocations, setSelectedLocations] = useState(-1);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredEvents, setFilteredEvents] = useState(events);
+  const [filteredEvents, setFilteredEvents] = useState(events || []);
 
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,30 +36,42 @@ export default function EventsHomePage({ events }) {
   };
 
   const parseDateString = (dateStr) => {
-    const parts = dateStr.split("-");
-    const day = parseInt(parts[1]);
-    const month = parts[2];
+    if (!dateStr) return null;
 
-    const monthMap = {
-      Jan: 0,
-      Feb: 1,
-      Mar: 2,
-      Apr: 3,
-      May: 4,
-      Jun: 5,
-      Jul: 6,
-      Aug: 7,
-      Sep: 8,
-      Oct: 9,
-      Nov: 10,
-      Dec: 11,
-    };
+    try {
+      const parts = dateStr.split("-");
+      const day = parseInt(parts[1]);
+      const month = parts[2];
 
-    const date = new Date(new Date().getFullYear(), monthMap[month], day);
-    return date.getTime();
+      const monthMap = {
+        Jan: 0,
+        Feb: 1,
+        Mar: 2,
+        Apr: 3,
+        May: 4,
+        Jun: 5,
+        Jul: 6,
+        Aug: 7,
+        Sep: 8,
+        Oct: 9,
+        Nov: 10,
+        Dec: 11,
+      };
+
+      if (monthMap[month] === undefined) {
+        return null;
+      }
+
+      const date = new Date(new Date().getFullYear(), monthMap[month], day);
+      return date.getTime();
+    } catch (error) {
+      return null;
+    }
   };
 
   useEffect(() => {
+    if (!events || events.length === 0) return;
+
     let result = [...events];
 
     // Apply search filter if searchQuery exists
@@ -82,18 +94,19 @@ export default function EventsHomePage({ events }) {
     }
 
     // Apply location filter if locations are selected
-    if (selectedFilter === 1) {
-      if (selectedLocations !== -1) {
-        result = result.filter(
-          (event) => event.eventLocation === selectedLocations,
-        );
-      }
+    if (selectedFilter === 1 && selectedLocations !== -1) {
+      const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/gi, "");
+
+      const locationToMatch = normalize(String(selectedLocations));
+
+      result = result.filter((event) => {
+        const normalizedEventLocation = normalize(event.eventLocation);
+        return normalizedEventLocation.includes(locationToMatch);
+      });
     }
 
     // Apply date filter if date range is set
     if (selectedFilter === 2 && dateRange?.start && dateRange?.end) {
-      console.log("Date Sorting");
-
       const startDate = new Date(
         dateRange.start.year,
         dateRange.start.month - 1,
@@ -106,41 +119,37 @@ export default function EventsHomePage({ events }) {
       );
 
       result = result.filter((event) => {
-        let eventDate = new Date(event.eventDate);
-        if (isNaN(eventDate.getTime())) {
-          console.warn("Invalid eventDate:", event.eventDate);
+        // Parse the event date properly
+        const dateParts = event.eventDate.split("-");
+        if (dateParts.length !== 4) return false;
+
+        const day = parseInt(dateParts[1]);
+        const monthStr = dateParts[2];
+        const year = parseInt(dateParts[3]);
+
+        const monthMap = {
+          Jan: 0,
+          Feb: 1,
+          Mar: 2,
+          Apr: 3,
+          May: 4,
+          Jun: 5,
+          Jul: 6,
+          Aug: 7,
+          Sep: 8,
+          Oct: 9,
+          Nov: 10,
+          Dec: 11,
+        };
+
+        if (isNaN(day) || isNaN(year) || !monthMap.hasOwnProperty(monthStr)) {
           return false;
         }
 
-        console.log("Event date", eventDate);
+        const eventDate = new Date(year, monthMap[monthStr], day);
 
-        const startYear = startDate.getFullYear();
-        const startMonth = startDate.getMonth();
-        const startDay = startDate.getDate();
-        const endYear = endDate.getFullYear();
-        const endMonth = endDate.getMonth();
-        const endDay = endDate.getDate();
-
-        let eventYear = eventDate.getFullYear();
-        let eventMonth = eventDate.getMonth();
-        let eventDay = eventDate.getDate();
-
-        if (eventYear < startYear || eventYear > endYear) {
-          console.log("Reject due year", event.eventName);
-          return false;
-        }
-
-        if (eventMonth < startMonth || eventMonth > endMonth) {
-          console.log("Reject due mont", event.eventName);
-          return false;
-        }
-
-        if (eventDay < startDay || eventDay > endDay) {
-          console.log("Reject due date", event.eventName);
-          return false;
-        }
-
-        return true;
+        // Compare the dates
+        return eventDate >= startDate && eventDate <= endDate;
       });
     }
 
@@ -153,12 +162,14 @@ export default function EventsHomePage({ events }) {
       result.sort((a, b) => {
         const dateA = parseDateString(a.eventDate);
         const dateB = parseDateString(b.eventDate);
+        if (!dateA || !dateB) return 0;
         return dateB - dateA;
       });
     }
 
     setFilteredEvents(result);
   }, [
+    events,
     searchQuery,
     selectedFilter,
     priceRange,
@@ -260,6 +271,7 @@ export default function EventsHomePage({ events }) {
                   className="min-w-[85%] bg-transparent py-1 pl-3 placeholder:text-sm placeholder:font-light placeholder:text-black/45 focus:outline-none"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  autoFocus
                 />
                 <motion.button
                   initial={{ opacity: 0 }}
