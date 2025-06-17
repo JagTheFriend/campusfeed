@@ -1,7 +1,7 @@
 import { Card, CardBody, CardFooter, Image, Link } from "@heroui/react";
 import { FaGithub } from "react-icons/fa";
 
-const ImageCard = ({ title, subtitle = "subtext", image, github }) => {
+const ImageCard = ({ title, subtitle, image, github }) => {
   return (
     <Card
       isPressable
@@ -23,7 +23,7 @@ const ImageCard = ({ title, subtitle = "subtext", image, github }) => {
       <CardFooter className="flex h-full w-full flex-row items-end justify-between text-neutral-900">
         <div className="flex w-[75%] flex-col items-center justify-start gap-2">
           <h1 className="text-md w-full text-left font-bold">{title}</h1>
-          <h1 className="w-full text-left text-sm">{subtitle}</h1>
+          {/* <h1 className="w-full text-left text-sm">{subtitle}</h1> */}
         </div>
         <div className="flex h-full w-[20%] items-end justify-end">
           <Link href={github} target="_blank">

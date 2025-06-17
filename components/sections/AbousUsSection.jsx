@@ -35,7 +35,7 @@ const AboutUsSection = () => {
               <ImageCard
                 key={member.id}
                 title={member.title}
-                subtitle={member.subtitle}
+                // subtitle={member.subtitle}
                 image={member.image}
                 github={member.github}
               />

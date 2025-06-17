@@ -282,7 +282,7 @@ const PublisherPage = () => {
             <div className="mb-4 grid w-full grid-cols-1 gap-8 lg:grid-cols-1">
               <Input
                 {...register("prizeAmount")}
-                type="number"
+                type="text"
                 name="prizeAmount"
                 label="Prize Amount"
                 variant="bordered"
